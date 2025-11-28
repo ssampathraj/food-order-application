@@ -1,0 +1,5 @@
+# common defaults for all services
+welcome:
+  message: "Hello from default config!"
+feature:
+  enabled: false

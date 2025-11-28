@@ -1,0 +1,7 @@
+server:
+  port: 8081
+
+welcome:
+  message: "Welcome delivery — config served from Config Server!"
+feature:
+  enabled: true
