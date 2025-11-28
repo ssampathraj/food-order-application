@@ -1,6 +1,8 @@
 server:
   port: 8081
-
+spring:
+  application:
+    name: DELIVERY-SERVICE
 welcome:
   message: "Welcome delivery — config served from Config Server!"
 feature:
