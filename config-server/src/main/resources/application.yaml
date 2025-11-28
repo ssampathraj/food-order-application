@@ -7,14 +7,12 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/ssampathraj/food-order-application/tree/main/config-repo
-          search:
-            paths: global,delivery
-          clone:
-            on:
-              start: true
-          default:
-            label: main
+          uri: https://github.com/ssampathraj/food-order-application.git
+          search-paths:
+            - config-repo/global
+            - config-repo/delivery
+          clone-on-start: true
+          default-label: main
 management:
   endpoints:
     web:
