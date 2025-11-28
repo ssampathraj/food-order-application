@@ -1,0 +1,5 @@
+# common defaults for all services
+welcome:
+  message: "Hello from dev config!"
+feature:
+  enabled: false
