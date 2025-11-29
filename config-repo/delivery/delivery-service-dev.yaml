@@ -4,6 +4,6 @@ spring:
   application:
     name: DELIVERY-SERVICE
 welcome:
-  message: "Welcome delivery —dev config served from Config Server! -  changes "
+  message: "Welcome delivery —dev config served from Config Server!  "
 feature:
   enabled: true
