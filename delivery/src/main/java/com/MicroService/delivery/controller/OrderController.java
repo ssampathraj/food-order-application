@@ -5,8 +5,10 @@ package com.MicroService.delivery.controller;
 
 import com.MicroService.delivery.model.OrderDetail;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.web.bind.annotation.*;
 
+@RefreshScope // actuator refresh adding this annotation and serviceurl/actuator/refresh  all external config files will update
 @RestController
 @RequestMapping("/api/delivery")
 public class OrderController {

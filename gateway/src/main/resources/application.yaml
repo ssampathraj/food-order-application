@@ -3,27 +3,58 @@ server:
 
 spring:
   application:
-    name: gateway
+    name: GATEWAY-SERVICE
+
   cloud:
     gateway:
       routes:
+        # ---------- AUTH SERVICE (NO JWT) ----------
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/auth/**
+          # No filters → PUBLIC ROUTES
+
+        # ---------- USER SERVICE ----------
         - id: user-service
           uri: lb://USER-SERVICE
           predicates:
             - Path=/api/user/**
+          filters:
+            - AuthFilter
+
+        # ---------- ORDER SERVICE ----------
         - id: order-service
           uri: lb://ORDER-SERVICE
           predicates:
             - Path=/api/order/**
-        - id: email-service
-          uri: lb://EMAIL-SERVICE
-          predicates:
-            - Path=/api/email/**
+          filters:
+            - AuthFilter
+
+        # ---------- DELIVERY SERVICE ----------
         - id: delivery-service
           uri: lb://DELIVERY-SERVICE
           predicates:
             - Path=/api/delivery/**
-# at last removed eureka server registration
+          filters:
+            - AuthFilter
+
+        # ---------- EMAIL SERVICE ----------
+        - id: email-service
+          uri: lb://EMAIL-SERVICE
+          predicates:
+            - Path=/api/email/**
+          filters:
+            - AuthFilter
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    registry-fetch-interval-seconds: 5
+  service-url:
+    defaultZone: http://localhost:8761/eureka/
+
 management:
   endpoints:
     web:
