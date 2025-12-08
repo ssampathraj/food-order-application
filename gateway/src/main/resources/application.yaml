@@ -6,14 +6,28 @@ spring:
     name: GATEWAY-SERVICE
 
   cloud:
+    inetutils:
+      preferred-networks:
+        - 127.0.0.1
+        - localhost
+      ignored-interfaces:
+        - docker0
+        - vEthernet.*
+        - VirtualBox.*
+        - VMware.*
+        - br-.*
+        - veth.*
+        - wsl.*
+        - Npcap.*
+        - lo0
+
     gateway:
       routes:
-        # ---------- AUTH SERVICE (NO JWT) ----------
+        # ---------- AUTH SERVICE ----------
         - id: auth-service
           uri: lb://AUTH-SERVICE
           predicates:
             - Path=/auth/**
-          # No filters → PUBLIC ROUTES
 
         # ---------- USER SERVICE ----------
         - id: user-service
@@ -21,7 +35,7 @@ spring:
           predicates:
             - Path=/api/user/**
           filters:
-            - AuthFilter
+            - Name: AuthFilter
 
         # ---------- ORDER SERVICE ----------
         - id: order-service
@@ -29,7 +43,7 @@ spring:
           predicates:
             - Path=/api/order/**
           filters:
-            - AuthFilter
+            - Name: AuthFilter
 
         # ---------- DELIVERY SERVICE ----------
         - id: delivery-service
@@ -37,7 +51,7 @@ spring:
           predicates:
             - Path=/api/delivery/**
           filters:
-            - AuthFilter
+            - Name: AuthFilter
 
         # ---------- EMAIL SERVICE ----------
         - id: email-service
@@ -45,18 +59,20 @@ spring:
           predicates:
             - Path=/api/email/**
           filters:
-            - AuthFilter
+            - Name: AuthFilter
 
 eureka:
   client:
     register-with-eureka: true
     fetch-registry: true
-    registry-fetch-interval-seconds: 5
-  service-url:
-    defaultZone: http://localhost:8761/eureka/
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    hostname: localhost
 
 management:
   endpoints:
     web:
       exposure:
-        include: "*"        # <-- expose all actuator endpoints
+        include: "*"

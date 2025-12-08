@@ -7,6 +7,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
+
 import com.microservice.gateway.util.JwtUtil;
 
 @Component
@@ -36,6 +37,16 @@ public class AuthFilterGatewayFilterFactory extends AbstractGatewayFilterFactory
             if (!jwtUtil.validateToken(token)) {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired token");
             }
+
+            // OPTIONAL → pass user ID / roles to downstream service
+            String username = jwtUtil.extractUsername(token);
+
+            exchange = exchange.mutate()
+                    .request(req -> req.headers(headers -> {
+                        headers.add("X-User-Id", username);
+                        // add more headers if needed
+                    }))
+                    .build();
 
             return chain.filter(exchange);
         };
