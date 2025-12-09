@@ -12,7 +12,6 @@ public class OrderController {
     @PostMapping("/order")
     public ResponseEntity<OrderDetail> newOrderDetails(@RequestBody OrderDetail order) throws InterruptedException {
         System.out.println("order received");
-        Thread.sleep(6000);
         return new ResponseEntity<>(order, HttpStatus.OK);
     }
 

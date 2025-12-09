@@ -1,0 +1,230 @@
+services:
+  # Service Registry (Eureka Server)
+  eureka-server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - EUREKA_DEFAULT_ZONE=http://eureka-server:8761/eureka/
+      - JAVA_OPTS=-Dcom.sun.jndi.ldap.connect.pool=false
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/eureka/apps"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Config Server
+  config-server:
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    depends_on:
+      - eureka-server
+    environment:
+      - SERVER_PORT=8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - EUREKA_INSTANCE_HOSTNAME=config-server
+      - EUREKA_INSTANCE_IPADDRESS=config-server
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
+      - JAVA_OPTS=-Dcom.sun.jndi.ldap.connect.pool=false
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./AuthService
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "8087:8087"
+    depends_on:
+      - eureka-server
+      - config-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - EUREKA_INSTANCE_HOSTNAME=auth-service
+      - EUREKA_INSTANCE_IPADDRESS=auth-service
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - JAVA_OPTS=-Dcom.sun.jndi.ldap.connect.pool=false
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Order Service
+  order-service-food:
+    build:
+      context: ./order
+      dockerfile: Dockerfile
+    container_name: order-service-food
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-server
+      - config-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - EUREKA_INSTANCE_HOSTNAME=order-service-food
+      - EUREKA_INSTANCE_IPADDRESS=order-service-food
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - EMAIL_SERVICE_URL=http://email-service:8083/api/email
+      - DELIVERY_SERVICE_URL=http://delivery-service:8081/api/delivery
+      - USER_SERVICE_URL=http://user-service:8082/api/user
+      - JAVA_OPTS=-Dcom.sun.jndi.ldap.connect.pool=false
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # User Service
+  user-service:
+    build:
+      context: ./user
+      dockerfile: Dockerfile
+    depends_on:
+      - eureka-server
+      - config-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+    networks:
+      - microservices-network
+    expose:
+      - "8082"
+    deploy:
+      replicas: 3
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  # Delivery Service
+  delivery-service:
+    build:
+      context: ./delivery
+      dockerfile: Dockerfile
+    container_name: delivery-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - eureka-server
+      - config-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - EUREKA_INSTANCE_HOSTNAME=delivery-service
+      - EUREKA_INSTANCE_IPADDRESS=delivery-service
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - JAVA_OPTS=-Dcom.sun.jndi.ldap.connect.pool=false
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Email Service
+  email-service:
+    build:
+      context: ./email
+      dockerfile: Dockerfile
+    container_name: email-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - eureka-server
+      - config-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - EUREKA_INSTANCE_HOSTNAME=email-service
+      - EUREKA_INSTANCE_IPADDRESS=email-service
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - JAVA_OPTS=-Dcom.sun.jndi.ldap.connect.pool=false
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  # API Gateway
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8090:8080"
+    depends_on:
+      - eureka-server
+      - config-server
+      - auth-service
+      - order-service-food
+      - user-service
+      - delivery-service
+      - email-service
+    environment:
+      - SERVER_PORT=8080
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - EUREKA_INSTANCE_HOSTNAME=gateway
+      - EUREKA_INSTANCE_IPADDRESS=gateway
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - JAVA_OPTS=-Dcom.sun.jndi.ldap.connect.pool=false
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - microservices-network
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - microservices-network
+    depends_on:
+      - prometheus
+
+
+networks:
+  microservices-network:
+    driver: bridge
